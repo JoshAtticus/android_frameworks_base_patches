@@ -1,5 +1,14 @@
 --- a/wifi.c
 +++ b/wifi.c
+@@ -146,7 +146,7 @@
+ 
+ #define WIFI_DRIVER_LOADER_DELAY	1000000
+ 
+-static const char IFACE_DIR[]           = "/data/system/wpa_supplicant";
++static const char IFACE_DIR[]           = "/data/misc/wifi/sockets";
+ #ifdef WIFI_DRIVER_MODULE_PATH
+ static const char DRIVER_MODULE_NAME[]  = WIFI_DRIVER_MODULE_NAME;
+ static const char DRIVER_MODULE_TAG[]   = WIFI_DRIVER_MODULE_NAME " ";
 @@ -441,6 +441,27 @@
          return -1;
      }
