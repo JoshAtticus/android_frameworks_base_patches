@@ -1,0 +1,31 @@
+--- a/libs/ui/GraphicBuffer.cpp
++++ b/libs/ui/GraphicBuffer.cpp
+@@ -19,6 +19,7 @@
+ #include <stdlib.h>
+ #include <stdint.h>
+ #include <sys/types.h>
++#include <new>
+ 
+ #include <utils/Errors.h>
+ #include <utils/Log.h>
+@@ -414,4 +415,20 @@
+ 
+ // ---------------------------------------------------------------------------
+ 
++// ABI compat for MTK 7.0 vendor blobs (camera, OMX encoder, mmutils): they
++// reference the Nougat-7.0 4-argument GraphicBuffer constructor
++// _ZN7android13GraphicBufferC1Ejjij, which N-MR1 (7.1) no longer exports
++// (the requestor-name parameter was folded into every signature). Define
++// the old mangled symbol as an extern "C" alias that placement-constructs
++// the object via the current 4-argument call (defaulted name).
++extern "C" android::GraphicBuffer* _ZN7android13GraphicBufferC1Ejjij(
++        void* self, unsigned int inWidth, unsigned int inHeight, int inFormat,
++        unsigned int inUsage);
++extern "C" android::GraphicBuffer* _ZN7android13GraphicBufferC1Ejjij(
++        void* self, unsigned int inWidth, unsigned int inHeight, int inFormat,
++        unsigned int inUsage) {
++    return new (self) android::GraphicBuffer(inWidth, inHeight,
++            static_cast<android::PixelFormat>(inFormat), inUsage);
++}
++
+ }; // namespace android
