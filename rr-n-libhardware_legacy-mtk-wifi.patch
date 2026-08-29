@@ -1,32 +1,34 @@
 --- a/wifi.c
 +++ b/wifi.c
-@@ -441,6 +441,25 @@
+@@ -441,6 +441,27 @@
          return -1;
      }
  #endif
 +#ifdef MTK_WMT_WIFI_POWERON
-+    /* MTK combo (SoC/consys): the WLAN function is powered on by writing "1"
-+     * to the /dev/wmtWifi char dev (kernel wmt_cdev_wifi.c WIFI_write). The
-+     * wlan0/p2p0 netdevices only appear after this. */
++    /* MTK combo (SoC/consys): the WLAN function is powered on by writing to
++     * the /dev/wmtWifi char dev (kernel wmt_cdev_wifi.c WIFI_write). "1" only
++     * brings up wlan0; the MTK wpa_supplicant also needs the dedicated p2p0
++     * netdev, which "S" creates (STA+P2P mode). */
 +    {
 +        int wfd = open("/dev/wmtWifi", O_WRONLY);
 +        if (wfd < 0) {
 +            ALOGE("failed to open /dev/wmtWifi (%s)", strerror(errno));
 +            return -1;
 +        }
-+        if (write(wfd, "1", 1) < 0)
++        if (write(wfd, "S", 1) < 0)
 +            ALOGE("wmtWifi power-on write failed (%s)", strerror(errno));
 +        close(wfd);
 +        /* wait for wlan0 registration */
 +        count = 100;
-+        while (count-- > 0 && access("/sys/class/net/wlan0", F_OK) != 0)
++        while (count-- > 0 && (access("/sys/class/net/wlan0", F_OK) != 0 ||
++                    access("/sys/class/net/p2p0", F_OK) != 0))
 +            usleep(100000);
 +    }
 +#endif
  
      if (strcmp(FIRMWARE_LOADER,"") == 0) {
          /* usleep(WIFI_DRIVER_LOADER_DELAY); */
-@@ -468,6 +487,17 @@
+@@ -468,6 +489,17 @@
  
  int wifi_unload_driver()
  {
@@ -44,16 +46,3 @@
      usleep(200000); /* allow to finish interface down */
  
      wifi_fst_unload_driver();
---- a/Android.mk
-+++ b/Android.mk
-@@ -20,6 +20,10 @@
- LOCAL_CFLAGS += -DNO_FINIT_MODULE
- endif
- 
-+ifeq ($(BOARD_HAS_MTK_WMT_WIFI), true)
-+LOCAL_CFLAGS += -DMTK_WMT_WIFI_POWERON
-+endif
-+
- ifeq ($(USES_TI_MAC80211), true)
- LOCAL_CFLAGS += -DUSES_TI_MAC80211
- ifneq ($(wildcard external/libnl),)
