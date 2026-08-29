@@ -80,3 +80,8 @@ Apply in `packages/apps`.
 - `CMParts/.../TouchscreenGestureSettings.java`: null-guard the gesture list
   (BootReceiver NPE on devices whose HAL reports gesture support but returns
   no gestures).
+
+## License
+
+GPL-3.0 (matches frameworks/base). Patch contains Apache-2.0 AOSP code
+(SQLiteTokenizer) — license headers preserved.
