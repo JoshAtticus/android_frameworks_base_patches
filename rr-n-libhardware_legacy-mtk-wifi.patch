@@ -46,3 +46,19 @@
      usleep(200000); /* allow to finish interface down */
  
      wifi_fst_unload_driver();
+@@ -867,6 +899,15 @@
+         ALOGE("Wi-Fi entropy file was not created");
+     }
+ 
++    /* The framework's connect path falls back to the "@android:wpa_wlan0"
++     * abstract socket when this directory is missing, which system_server
++     * can never open (no ANDROID_SOCKET_ env). It gets deleted by teardown
++     * paths, so recreate it here. */
++    if (access(IFACE_DIR, F_OK) != 0) {
++        if (mkdir(IFACE_DIR, 0770) != 0)
++            ALOGE("could not create %s (%s)", IFACE_DIR, strerror(errno));
++    }
++
+ #ifdef USES_TI_MAC80211
+     if (p2p_supported && add_remove_p2p_interface(1) < 0) {
+         ALOGE("Wi-Fi - could not create p2p interface");
